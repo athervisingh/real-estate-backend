@@ -6,6 +6,13 @@ import { connectDB } from "./db.js";
 import adminRoutes from "./routes/admin.js";
 import homePageRoutes from './routes/homePage.js';
 import searchRoute from './routes/searchRoute.js'
+
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 dotenv.config();
 const app = express();
 
@@ -13,11 +20,12 @@ app.use(express.json());
 
 // Serve static files from the frontend build
 app.use(express.static(path.join(__dirname, 'dist')));
-
-// Fallback route for SPA
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+console.log(path.join(__dirname, "dist", "index.html"))
+// For any route not handled by backend API, serve index.html (for React Router)
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
+
 
 
 // Connect to MongoDB and start server
@@ -33,9 +41,7 @@ const startServer = async () => {
     console.log("✅ Homepage routes registered");
     
     app.use("/api/search", searchRoute);
-    app.get("/api/admin/test", (req, res) => {
-      res.send("✅ Admin test route is working");
-    });
+  
 
     app.get("/", (req, res) => {
       res.send("Server is running 🚀");
@@ -61,3 +67,6 @@ const startServer = async () => {
 };
 
 startServer(); // 🚀 Start the server
+
+
+
