@@ -1,6 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
-import cors from "cors";
+
 import upload from "./utils/multer.js"; 
 import { connectDB } from "./db.js";
 import adminRoutes from "./routes/admin.js";
@@ -9,13 +9,16 @@ import searchRoute from './routes/searchRoute.js'
 dotenv.config();
 const app = express();
 
-app.use(cors({
-  origin: 'http://localhost:5173',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true,  // Allow credentials
-}));
-
 app.use(express.json());
+
+// Serve static files from the frontend build
+app.use(express.static(path.join(__dirname, 'dist')));
+
+// Fallback route for SPA
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+});
+
 
 // Connect to MongoDB and start server
 const startServer = async () => {
