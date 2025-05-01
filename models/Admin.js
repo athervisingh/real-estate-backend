@@ -7,7 +7,7 @@ const AdminSchema = new mongoose.Schema({
   password: { type: String, required: true },
 });
 
-// hash password before saving
+// Automatically hash password on save
 AdminSchema.pre('save', async function (next) {
   if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);

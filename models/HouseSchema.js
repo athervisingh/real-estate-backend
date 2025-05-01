@@ -7,6 +7,10 @@ const houseSchema = new mongoose.Schema({
   imageurl: String,
   discription: String,
   price: Number,
+  location: String,
+  bedrooms: String,
+  bathrooms: String,
+  parking: String,
 });
 
 export default houseSchema;

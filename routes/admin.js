@@ -9,6 +9,8 @@ import {
   Fujairah,
   UmmAlQuwain,
   RasAlKhaimah,
+  InternationalProjects,
+  PenthousesAndLuxuryVillas,
 } from "../models/EmirateModels.js";
 import mongoose from "mongoose";
 import houseSchema from "../models/HouseSchema.js";
@@ -27,6 +29,8 @@ const modelMap = {
   Fujairah,
   UmmAlQuwain,
   RasAlKhaimah,
+  InternationalProjects,
+  PenthousesAndLuxuryVillas,
 };
 
 // ✅ Test route
@@ -38,17 +42,18 @@ router.get("/test", (req, res) => {
 router.post("/update-city", upload.single("image"), async (req, res) => {
   try {
     const { city, description } = req.body;
+    console.log(city,description)
     const imageUrl = req.file?.path;
-
+console.log(imageUrl)
     if (!city || !description || !imageUrl) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
     const updatedCity = await City.findOneAndUpdate(
       { name: city.trim().replace(/\s+/g, "-") },
-      { text: description, image: imageUrl },
+      { text: description, image: imageUrl }, { new: true },
     );
-
+console.log('sdda',updatedCity)
     res.status(200).json({ message: "City data updated", data: updatedCity });
   } catch (err) {
     console.error("❌ Error in update-city:", err);
@@ -61,10 +66,11 @@ router.get("/fetch-city-data", async (req, res) => {
   try {
     const { city } = req.query;
 
+
     if (!city || !modelMap[city]) {
       return res.status(400).json({ error: "Invalid or missing city name" });
     }
-
+  
     const data = await modelMap[city].find({});
     res.status(200).json(data);
   } catch (error) {
@@ -78,6 +84,7 @@ router.post("/edit-city", upload.single("image"), async (req, res) => {
     const { id, name, discription, city } = req.body;
     const Model = modelMap[city];
 
+    console.log('dfdf',Model)
     if (!id || !name || !discription || !Model) {
       console.log("❌ Missing required fields");
       return res.status(400).json({ error: "Missing required fields." });
@@ -85,6 +92,7 @@ router.post("/edit-city", upload.single("image"), async (req, res) => {
 
     // 🔍 Step 1: Fetch existing doc to get old name
     const existingDoc = await Model.findById(id);
+    console.log(existingDoc);
     if (!existingDoc) {
       console.log("❌ Document not found with ID:", id);
       return res.status(404).json({ error: "Document not found." });
@@ -94,8 +102,8 @@ router.post("/edit-city", upload.single("image"), async (req, res) => {
     const oldColl = oldName.toLowerCase().replace(/\s+/g, "_");
     const newColl = name.toLowerCase().replace(/\s+/g, "_");
 
-    console.log(`🧾 Old name: ${oldName} => ${oldColl}`);
-    console.log(`🧾 New name: ${name} => ${newColl}`);
+    // console.log(`🧾 Old name: ${oldName} => ${oldColl}`);
+    // console.log(`🧾 New name: ${name} => ${newColl}`);
 
     // 🔁 Only attempt rename if name changed
     if (oldName !== name) {
@@ -267,6 +275,50 @@ router.get("/delete-area-collections", async (req, res) => {
 });
 
 
+
+function getAreaModel(cityName) {
+  // Format the collection name
+  const collectionName = cityName.replace(/-/g, "_");
+
+  // Ensure the model is created based on the collection
+  if (mongoose.models[collectionName]) {
+    return mongoose.models[collectionName];
+  }
+
+  return mongoose.model(collectionName, houseSchema, collectionName);
+}
+// Route to fetch properties based on city and area
+router.get("/properties/:cityName/:areaName", async (req, res) => {
+  try {
+    const { cityName, areaName } = req.params;
+
+ 
+    if (!cityName || !areaName) {
+      return res.status(400).json({ error: "City name and Area name are required" });
+    }
+
+    // Get the model for the specific city
+    const House = getAreaModel(cityName);
+
+    // Find documents where name matches the areaName (case insensitive)
+    const query = { name: { $regex: new RegExp(areaName, "i") } };
+    console.log("Query:", query);
+    
+    const areaDocument = await House.findOne(query);
+    console.log("Result:", areaDocument);
+
+    if (!areaDocument) {
+      return res.status(404).json({ error: "No property found for this area" });
+    }
+
+    // Return the document to the frontend
+    res.status(200).json(areaDocument);
+  } catch (error) {
+    console.error("Error fetching property:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
 // ✅ Dynamic model generator using existing houseSchema
 function getHouseModel(areaName) {
   const collectionName = areaName.toLowerCase().replace(/-/g, "_");
@@ -335,9 +387,9 @@ router.post("/update-property", upload.single("image"), async (req, res) => {
   console.log("✅ POST request hit for update-property");
 
   try {
-    const { _id, house_name, house_type, for: propertyFor, discription, price, areaName } = req.body;
+    const { _id, house_name, house_type, for: propertyFor, discription, price, areaName ,location,bedrooms,bathrooms,parking} = req.body;
 
-    if (!_id || !house_name || !house_type || !propertyFor || !discription || !price || !areaName) {
+    if (!_id || !house_name || !house_type || !propertyFor || !discription || !price || !areaName || !location || !bedrooms || !bathrooms || !parking) {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
@@ -362,6 +414,10 @@ router.post("/update-property", upload.single("image"), async (req, res) => {
       for: propertyFor,
       discription,
       price,
+      location,
+      bedrooms,
+      bathrooms,
+      parking,
     };
 
     if (imageurl) {
@@ -425,14 +481,7 @@ router.post("/add-property", upload.single("image"), async (req, res) => {
   try {
     const { house_name, house_type, for: propertyFor, discription, price, areaName } = req.body;
 
-    console.log("📦 Request body:");
-    console.log("house_name:", house_name);
-    console.log("house_type:", house_type);
-    console.log("for:", propertyFor);
-    console.log("discription:", discription);
-    console.log("price:", price);
-    console.log("areaName:", areaName);
-    console.log("🖼️ Image file:", req.file);
+   
 
     if (!house_name || !house_type || !propertyFor || !discription || !price || !areaName) {
       console.log("⚠️ Missing fields in request");
@@ -500,6 +549,7 @@ router.post('/register', async (req, res) => {
   }
 });
 
+// Login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -510,10 +560,7 @@ router.post('/login', async (req, res) => {
     const isMatch = await bcrypt.compare(password, admin.password);
     if (!isMatch) return res.status(400).json({ msg: 'Invalid password' });
 
-    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, {
-      expiresIn: '1h',
-    });
-
+    const token = jwt.sign({ id: admin._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
     res.json({ token });
   } catch (err) {
     console.error(err);
@@ -521,12 +568,10 @@ router.post('/login', async (req, res) => {
   }
 });
 
-
-// ✅ Protected route
-router.get("/dashboard", auth, (req, res) => {
+// Protected Route
+router.get('/dashboard', auth, (req, res) => {
   res.json({ msg: `Welcome admin ${req.admin.id}` });
 });
-
 
 // Forgot Password
 router.post('/forgot-password', async (req, res) => {
@@ -543,7 +588,8 @@ router.post('/forgot-password', async (req, res) => {
       pass: process.env.EMAIL_PASS,
     },
   });
-  const resetURL = `http://localhost:5173/reset-password/${token}`;
+
+  const resetURL = `https://empirekeyprop.com/reset-password/${token}`;
   const message = `Click to reset your password: <a href="${resetURL}">${resetURL}</a>`;
 
   await transporter.sendMail({
@@ -555,20 +601,16 @@ router.post('/forgot-password', async (req, res) => {
   res.json({ msg: 'Reset link sent to email' });
 });
 
-
+// Reset Password — let Mongoose handle hashing
 router.post('/reset-password/:token', async (req, res) => {
   const { password } = req.body;
 
   try {
     const decoded = jwt.verify(req.params.token, process.env.JWT_SECRET);
     const admin = await Admin.findById(decoded.id);
-
     if (!admin) return res.status(400).json({ msg: 'Admin not found' });
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    admin.password = hashedPassword;
+    admin.password = password; // Don't hash manually
     await admin.save();
 
     res.json({ msg: 'Password reset successful' });
@@ -577,6 +619,7 @@ router.post('/reset-password/:token', async (req, res) => {
     res.status(400).json({ msg: 'Invalid or expired token' });
   }
 });
+
 
 
 

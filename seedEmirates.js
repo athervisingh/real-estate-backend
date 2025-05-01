@@ -10,7 +10,8 @@ import {
   Fujairah,
   UmmAlQuwain,
   RasAlKhaimah,
-} from "./models/EmirateModels.js"; // Each model must be created separately
+  InternationalProjects
+} from "./models/EmirateModels.js";
 
 dotenv.config();
 
@@ -90,29 +91,36 @@ const emirateData = {
     { name: "Khor Al Yeefrah", imageURL: "url9", discription: "Affordable plots and homes." },
     { name: "Al Ittihad", imageURL: "url10", discription: "Residential hub near highway." },
   ],
-  RasAlKhaimah: [
-    { name: "Marjan Island", imageURL: "url1", discription: "Resort-style luxury living." },
-    { name: "Al Hamra Village", imageURL: "url2", discription: "Golf course villas and apartments." },
-    { name: "Mina Al Arab", imageURL: "url3", discription: "Coastal gated communities." },
-    { name: "Al Dhait", imageURL: "url4", discription: "Affordable housing zone." },
-    { name: "Khuzam", imageURL: "url5", discription: "Traditional RAK homes with upgrades." },
-    { name: "Seih Al Uraibi", imageURL: "url6", discription: "Villas with mountains nearby." },
-    { name: "Jazeera Al Hamra", imageURL: "url7", discription: "Heritage town turned real estate gem." },
-    { name: "Al Nakheel", imageURL: "url8", discription: "Apartments close to malls and markets." },
-    { name: "Al Qusaidat", imageURL: "url9", discription: "Hospital area with real estate boom." },
-    { name: "Al Rams", imageURL: "url10", discription: "Coastal living in traditional setup." },
+  InternationalProjects: [
+    { name: "AMMAN", imageURL: "url1", discription: "Resort-style luxury living with stunning views and rich cultural charm." },
+    { name: "LEBANON", imageURL: "url2", discription: "Golf course villas and apartments amidst Lebanon's natural beauty." },
+    { name: "LONDON", imageURL: "url3", discription: "Exclusive coastal gated communities offering luxury and scenic waterfronts." },
+    { name: "QATAR", imageURL: "url4", discription: "Affordable housing in modern, community-oriented neighborhoods." },
+    { name: "RIYADH", imageURL: "url5", discription: "Traditional RAK homes with modern upgrades for a unique living experience." },
   ],
 };
 
 // Insert data
-await AbuDhabi.insertMany(emirateData.AbuDhabi);
-await Dubai.insertMany(emirateData.Dubai);
-await Sharjah.insertMany(emirateData.Sharjah);
-await Ajman.insertMany(emirateData.Ajman);
-await Fujairah.insertMany(emirateData.Fujairah);
-await UmmAlQuwain.insertMany(emirateData.UmmAlQuwain);
-await RasAlKhaimah.insertMany(emirateData.RasAlKhaimah);
+async function seedData(model, data) {
+  const formattedData = data.map(item => ({
+    ...item,
+    neighbourhood: ["asas",'sadaa','sdadsd','sadasd'],
+    feature: ['sdadasd','sadad','sadads','ddadd'],
+    pdf: "",
+    floorplan: [],
+    images: [],
+  }));
+  await model.insertMany(formattedData);
+}
 
-console.log("✅ 10+ areas per Emirate inserted");
+// await seedData(AbuDhabi, emirateData.AbuDhabi);
+// await seedData(Dubai, emirateData.Dubai);
+// await seedData(Sharjah, emirateData.Sharjah);
+// await seedData(Ajman, emirateData.Ajman);
+// await seedData(Fujairah, emirateData.Fujairah);
+// await seedData(UmmAlQuwain, emirateData.UmmAlQuwain);
+await seedData(InternationalProjects, emirateData.InternationalProjects);
+
+console.log("✅ 10+ areas per Emirate inserted with all fields");
 
 await mongoose.disconnect();
