@@ -5,6 +5,7 @@ import { connectDB } from "./db.js";
 import adminRoutes from "./routes/admin.js";
 import homePageRoutes from './routes/homePage.js';
 import searchRoute from './routes/searchRoute.js'
+import damac360Route from './routes/damac360.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -42,6 +43,12 @@ const startServer = async () => {
     
     try {
       app.use("/api/search", searchRoute);
+      console.log("✅ Search routes registered");
+    } catch (err) {
+      console.error("❌ Error in searchRoute:", err);
+    }
+    try {
+      app.use("/api/damac360", damac360Route);
       console.log("✅ Search routes registered");
     } catch (err) {
       console.error("❌ Error in searchRoute:", err);
